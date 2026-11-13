@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Consulta de cambio de sabor – Líneas de envasado</title>
+<style>
+  :root{--bg:#f6f7f9;--card:#fff;--ink:#1d2430;--muted:#5f6b7a;--line:#dde2e8;--brand:#c8102e}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:16px}
+  header{background:var(--brand);color:#fff;padding:16px 18px}
+  header h1{margin:0;font-size:19px}
+  header p{margin:4px 0 0;font-size:12.5px;opacity:.9}
+  main{max-width:640px;margin:0 auto;padding:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+  label{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
+  select{width:100%;font-size:16px;padding:11px 10px;border:1px solid #c5ccd5;border-radius:8px;background:#fff;color:var(--ink)}
+  .field{margin-bottom:12px}
+  .field:last-child{margin-bottom:0}
+  .swap{display:block;margin:-2px auto 10px;border:1px solid #c5ccd5;background:#fff;border-radius:20px;padding:6px 14px;font-size:14px;cursor:pointer;color:var(--ink)}
+  #result{display:none}
+  .code{display:inline-block;font-size:30px;font-weight:800;padding:8px 16px;border-radius:10px;letter-spacing:.5px}
+  .desc{font-size:17px;font-weight:600;margin:10px 0 4px}
+  .route{font-size:14px;color:var(--muted)}
+  .why{font-size:14px;margin-top:10px;line-height:1.4}
+  .lv-NA{background:#eceff3;color:#3c4652}
+  .lv-AT{background:#e3f4e1;color:#1f6a2b}
+  .lv-3P{background:#fbefcf;color:#7a5600}
+  .lv-5P{background:#fde3d3;color:#9a3a0a}
+  .lv-5PP,.lv-5PF{background:#fbdada;color:#9b1020}
+  .notes{margin:14px 0 0;padding:0;list-style:none}
+  .notes li{border-left:4px solid #e0a800;background:#fff9e8;padding:9px 11px;border-radius:6px;margin-bottom:8px;font-size:14px;line-height:1.4}
+  .notes li.info{border-color:#4a7bd0;background:#eef4fd}
+  .notes li.crit{border-color:#c8102e;background:#fdeeee}
+  details{font-size:14px}
+  summary{cursor:pointer;font-weight:600}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;margin-top:8px}
+  td{border-bottom:1px solid var(--line);padding:6px 4px;vertical-align:top}
+  td:first-child{font-weight:700;white-space:nowrap;width:80px}
+  .tag{padding:2px 6px;border-radius:4px}
+  footer{font-size:11.5px;color:var(--muted);text-align:center;padding:4px 16px 24px;line-height:1.5}
+</style>
+</head>
+<body>
+<header>
+  <h1>Consulta de cambio de sabor</h1>
+  <p>Matriz PE-PUC-CDS-MFA-CC-LS-L-012 · Ed. 24.1 · 14/08/2026</p>
+</header>
+<main>
+  <div class="card">
+    <div class="field">
+      <label for="de">Producto que sale de línea (DE)</label>
+      <select id="de"></select>
+    </div>
+    <button class="swap" id="swap" type="button">⇅ Intercambiar</button>
+    <div class="field">
+      <label for="a">Producto que entra a línea (A)</label>
+      <select id="a"></select>
+    </div>
+  </div>
+
+  <div class="card" id="result" aria-live="polite">
+    <span class="code" id="rcode"></span>
+    <div class="desc" id="rdesc"></div>
+    <div class="route" id="rroute"></div>
+    <div class="why" id="rwhy"></div>
+    <ul class="notes" id="rnotes"></ul>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>Abreviaturas</summary>
+      <table>
+        <tr><td><span class="tag lv-AT">AT</span></td><td>Enjuague con agua tratada</td></tr>
+        <tr><td><span class="tag lv-3P">3P</span></td><td>Limpieza y sanitización 3 pasos</td></tr>
+        <tr><td><span class="tag lv-5P">5P</span></td><td>Limpieza y sanitización 5 pasos</td></tr>
+        <tr><td><span class="tag lv-5PP">5P Pung.</span></td><td>Limpieza y sanitización 5 pasos para producto pungente</td></tr>
+        <tr><td><span class="tag lv-5PF">5PF</span></td><td>Limpieza y sanitización 5 pasos FURY</td></tr>
+        <tr><td><span class="tag lv-NA">NA</span></td><td>No aplica</td></tr>
+      </table>
+    </details>
+  </div>
+</main>
+<footer>
+  Herramienta de consulta basada en la copia controlada publicada en planta. Ante casos no contemplados, el Jefe de Aseguramiento de la Calidad decide el tratamiento. Verificar siempre contra el documento oficial vigente.
+</footer>
+
+<script>
+// Grupos de la matriz (orden de columnas A)
+const GROUPS = {
+  iko:'Inca Kola Original', ikma:'Inca Kola Reformulada', ccma:'Coca-Cola Reformulada', cco:'Coca-Cola Sabor Original',
+  sa:'Productos libres de azúcar', pung:'Productos pungentes', turb:'No pungentes con apariencia turbia',
+  transp:'No pungentes con apariencia transparente', asg:'Aguas sin gas', acg:'Aguas con gas', acgs:'Aguas con gas saborizadas',
+  ftp:'Frugos Fresh Tropical Punch', pcm:'Powerade Citrus Maracuyá', ener:'Producto carbonatado energizante',
+  ncv:'No carbonatados (Powerade, Frugos Fresh, agua saborizada)', jar:'Jarabe post-mix reformulado'
+};
+const COLS = ['iko','ikma','ccma','cco','sa','pung','turb','transp','asg','acg','acgs','ftp','pcm','ener','ncv','jar'];
+const M = {
+ iko:   'NA AT 3P 3P 3P AT AT 3P 5P 5P 3P 5P 5P 5PF 5P 3P',
+ ikma:  'AT NA 3P 3P 3P AT AT 3P 5P 5P 3P 5P 5P 5PF 5P 3P',
+ ccma:  '3P AT NA AT 3P AT AT 3P 5P 5P 3P 5P 5P 5PF 5P AT',
+ cco:   'AT AT AT NA 3P AT AT 3P 5P 5P 3P 5P 5P 5PF 5P AT',
+ jar:   'AT AT AT NA 3P AT AT 3P 5P 5P 3P 5P 5P 5PF 5P NA',
+ sa:    '3P 3P 3P 3P 3P AT 3P 3P 5P 5P 3P 5P 5P 5PF 5P 3P',
+ pung:  '5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP',
+ turb:  '3P 3P 3P 3P 3P AT AT 3P 5P 5P 3P 5P 5P 5PF 5P 3P',
+ transp:'3P 3P 3P 3P 3P AT AT 3P 5P 5P 3P 5P 5P 5PF 5P 3P',
+ ftp:   '5P 5P 5P 5P 5P 5P 5P 5P 5P 5P 5P NA 5P 5PF 5P 5P',
+ pcm:   '5P 5P 5P 5P 5P 5P 5P 5P 5P 5P 5P 5P NA 5PF 5P 5P',
+ ener:  '5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PP 5PF 5PP 5PP',
+ asg:   'AT AT AT AT AT AT AT AT AT AT AT 5P 5P 5PF 5P AT',
+ acg:   'AT AT AT AT AT AT AT AT AT NA AT AT AT 5PF AT AT',
+ acgs:  '3P 3P 3P 3P 3P AT AT 3P 5P 5P 3P 5P 5P 5PF 5P 3P',
+ ncv:   '5P 5P 5P 5P 5P 5P 5P 5P 5P 5P 5P 5P 5P 5PF 5P 3P'
+};
+// Productos individuales: g = grupo de la matriz, s = sabor (para la regla sin azúcar → jarabeado), az = contiene azúcar
+const P = [
+  {id:'iko', n:'Inca Kola Original', g:'iko', s:'ik', az:true},
+  {id:'ikma',n:'Inca Kola Reformulada (menos azúcar)', g:'ikma', s:'ik', az:true},
+  {id:'ccma',n:'Coca-Cola Reformulada (menos azúcar)', g:'ccma', s:'cc', az:true},
+  {id:'cco', n:'Coca-Cola Sabor Original', g:'cco', s:'cc', az:true},
+  {id:'jar', n:'Jarabe post-mix reformulado (menos azúcar)', g:'jar', az:true},
+  {id:'iksa',n:'Inca Kola Sin Azúcar', g:'sa', s:'ik'},
+  {id:'ccsa',n:'Coca-Cola Sin Azúcar', g:'sa', s:'cc'},
+  {id:'spsa',n:'SP Sin Azúcar', g:'sa', s:'sp'},
+  {id:'fasa',n:'Fanta Sin Azúcar', g:'sa', s:'fanta'},
+  {id:'crush',n:'Crush Naranja', g:'sa', s:'crush'},
+  {id:'fki', n:'Fanta Kola Inglesa', g:'pung', az:true},
+  {id:'fmv', n:'Fanta Manzana Verde', g:'pung', az:true},
+  {id:'fuva',n:'Fanta Uva', g:'pung', az:true},
+  {id:'fna', n:'Fanta Naranja', g:'turb', s:'fanta', az:true},
+  {id:'sch', n:'Schweppes Citrus', g:'transp', az:true},
+  {id:'gin', n:'Ginger Ale', g:'transp', az:true},
+  {id:'slsg',n:'San Luis sin gas', g:'asg'},
+  {id:'bene',n:'Benedictino', g:'asg'},
+  {id:'slcg',n:'San Luis con gas', g:'acg'},
+  {id:'acgs',n:'Agua con gas saborizada', g:'acgs', az:true},
+  {id:'ftp', n:'Frugos Fresh Tropical Punch', g:'ftp', az:true, punch:true},
+  {id:'pcm', n:'Powerade Citrus Maracuyá', g:'pcm', az:true},
+  {id:'pmf', n:'Powerade Multifrutas', g:'ncv', az:true},
+  {id:'plim',n:'Powerade Limón', g:'ncv', az:true},
+  {id:'puv', n:'Powerade Uva Mora', g:'ncv', az:true},
+  {id:'ffc', n:'Frugos Fresh Citrus (Naranja)', g:'ncv', az:true, nar:true},
+  {id:'fffp',n:'Frugos Fresh Fruit Punch', g:'ncv', az:true, punch:true},
+  {id:'ffm', n:'Frugos Fresh Manzana', g:'ncv', az:true},
+  {id:'aslim',n:'Agua saborizada Limón', g:'ncv', az:true},
+  {id:'asar',n:'Agua saborizada Arándano', g:'ncv', az:true},
+  {id:'fury',n:'FURY (energizante)', g:'ener', az:true}
+];
+const GROUP_ORDER = ['iko','ikma','ccma','cco','jar','sa','pung','turb','transp','asg','acg','acgs','ftp','pcm','ncv','ener'];
+const OPTLABEL = {iko:'Inca Kola / Coca-Cola',ikma:'Inca Kola / Coca-Cola',ccma:'Inca Kola / Coca-Cola',cco:'Inca Kola / Coca-Cola',jar:'Jarabe',
+  sa:'Libres de azúcar',pung:'Pungentes',turb:'No pungentes',transp:'No pungentes',asg:'Aguas',acg:'Aguas',acgs:'Aguas',
+  ftp:'No carbonatados',pcm:'No carbonatados',ncv:'No carbonatados',ener:'Energizante'};
+const DESC = {
+  NA:'No aplica limpieza ni sanitización', AT:'Enjuague con agua tratada',
+  '3P':'Limpieza y sanitización 3 pasos', '5P':'Limpieza y sanitización 5 pasos',
+  '5PP':'Limpieza y sanitización 5 pasos para producto pungente', '5PF':'Limpieza y sanitización 5 pasos FURY'
+};
+const LABEL = {'5PP':'5P Pungente'};
+const byId = id => P.find(p=>p.id===id);
+
+const de = document.getElementById('de'), a = document.getElementById('a');
+function fill(sel, ph){
+  let html = '<option value="">'+ph+'</option>', cur = null;
+  const sorted = GROUP_ORDER.flatMap(g=>P.filter(p=>p.g===g));
+  sorted.forEach(p=>{
+    const lab = OPTLABEL[p.g];
+    if (lab !== cur){ if(cur) html+='</optgroup>'; html+='<optgroup label="'+lab+'">'; cur = lab; }
+    html += '<option value="'+p.id+'">'+p.n+'</option>';
+  });
+  sel.innerHTML = html + '</optgroup>';
+}
+fill(de,'Selecciona el producto anterior…');
+fill(a,'Selecciona el producto siguiente…');
+
+function resolve(f, t){
+  const notes = [];
+  const base = M[f.g].split(' ')[COLS.indexOf(t.g)];
+  let code = base, why = '';
+
+  if (f.id === t.id) {
+    code = 'NA';
+    why = 'Es el mismo producto: si solo cambia el formato, no aplica limpieza y sanitización.';
+    if (f.g === 'acgs') why += ' Si cambia el sabor del agua con gas saborizada, aplica 3P.';
+    if (f.g === 'ener') { code = '5PF'; why = 'Producción continua de FURY: el 5PF aplica 48 horas después del inicio de la producción.'; }
+  } else if (f.g === 'sa' && ['iko','ikma','ccma','cco','turb'].includes(t.g) && f.s && f.s === t.s) {
+    code = 'AT';
+    why = 'Pasas de un sin azúcar a un jarabeado del mismo sabor (regular o reformulado): solo aplica enjuague con agua tratada.';
+  } else if ((f.nar && t.punch) || (f.punch && t.nar)) {
+    code = '3P';
+    why = 'Excepción de la matriz: Frugos Fresh Naranja ↔ Frugos Fresh Punch (y viceversa) solo requiere 3 pasos.';
+  } else if (f.g === 'ncv' && t.g === 'ncv') {
+    {
+      code = '5P';
+      why = 'Cambio entre productos distintos del grupo de no carbonatados: 5 pasos. (La excepción de 3P es solo Frugos Fresh Citrus/Naranja ↔ Punch.)';
+    }
+  } else if (f.g === t.g && base === 'NA') {
+    why = 'Cambio dentro del mismo grupo. La matriz no contempla este caso: consulta al Jefe de Aseguramiento de la Calidad.';
+    code = 'NA';
+  } else if (f.g === t.g) {
+    why = 'Cambio entre dos productos del mismo grupo (' + GROUPS[f.g] + ').';
+  }
+
+  if (f.g === 'ncv' && t.g === 'asg') {
+    notes.push(['info','Si el envasado es en la línea 3, este cambio requiere 10P.']);
+  }
+  if (t.g === 'sa' && f.az) {
+    notes.push(['warn','Cambio de producto con azúcar a sin azúcar: toma una muestra del agua de enjuague de la llenadora y entrégala al Analista de Control de Productos para verificar ausencia de azúcar.']);
+  }
+  if (f.g === 'asg' && t.g !== 'asg') {
+    notes.push(['info','En las líneas 4 y 12, después de agua sin gas, considera también el tiempo de parada de línea carbonatada (procedimiento PE-PUC-CDS-MFA-CC-LS-P-002).']);
+  }
+  if (f.g === 'ener' || t.g === 'ener') {
+    notes.push(['crit','FURY: la línea debe detenerse cada 48 horas tras el inicio de la producción para realizar CIP 5PF.']);
+  }
+  return {code, why, notes};
+}
+
+function render(){
+  const box = document.getElementById('result');
+  if (!de.value || !a.value) { box.style.display='none'; return; }
+  const f = byId(de.value), t = byId(a.value);
+  const r = resolve(f, t);
+  const c = document.getElementById('rcode');
+  c.textContent = LABEL[r.code] || r.code;
+  c.className = 'code lv-' + r.code;
+  document.getElementById('rdesc').textContent = DESC[r.code];
+  document.getElementById('rroute').textContent = f.n + '  →  ' + t.n;
+  document.getElementById('rwhy').textContent = r.why;
+  document.getElementById('rnotes').innerHTML = r.notes.map(n=>'<li class="'+n[0]+'">'+n[1]+'</li>').join('');
+  box.style.display='block';
+}
+[de,a].forEach(el=>el.addEventListener('change',render));
+document.getElementById('swap').addEventListener('click',()=>{const t=de.value;de.value=a.value;a.value=t;render();});
+</script>
+</body>
+</html>
