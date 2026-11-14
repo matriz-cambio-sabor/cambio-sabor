@@ -132,12 +132,13 @@ const P = [
   {id:'fki', n:'Fanta Kola Inglesa', g:'pung', az:true},
   {id:'fmv', n:'Fanta Manzana Verde', g:'pung', az:true},
   {id:'fuva',n:'Fanta Uva', g:'pung', az:true},
-  {id:'fna', n:'Fanta', g:'turb', s:'fanta', az:true},
+  {id:'fna', n:'Fanta Naranja', g:'turb', s:'fanta', az:true},
   {id:'sch', n:'Schweppes Citrus', g:'transp', az:true},
-  {id:'gin', n:'Ginger Ale', g:'transp', az:true},
+  {id:'gin', n:'Schweppes Ginger', g:'transp', az:true},
   {id:'slsg',n:'San Luis sin gas', g:'asg'},
   {id:'slcg',n:'San Luis con gas', g:'acg'},
-  {id:'acgs',n:'Agua con gas saborizada', g:'acgs', az:true},
+  {id:'slman',n:'San Luis Manzana', g:'acgs', az:true},
+  {id:'slmar',n:'San Luis Maracuyá', g:'acgs', az:true},
   {id:'ftp', n:'Frugos Fresh Tropical Punch', g:'ftp', az:true, punch:true},
   {id:'pcm', n:'Powerade Citrus Maracuyá', g:'pcm', az:true},
   {id:'pmf', n:'Powerade Multifrutas', g:'ncv', az:true},
@@ -146,9 +147,7 @@ const P = [
   {id:'ffc', n:'Frugos Fresh Citrus (Naranja)', g:'ncv', az:true, nar:true},
   {id:'fffp',n:'Frugos Fresh Fruit Punch', g:'ncv', az:true, punch:true},
   {id:'ffm', n:'Frugos Fresh Manzana', g:'ncv', az:true},
-  {id:'slman',n:'San Luis Manzana', g:'ncv', az:true},
   {id:'asar',n:'San Luis Arándano', g:'ncv', az:true},
-  {id:'slmar',n:'San Luis Maracuyá', g:'ncv', az:true},
   {id:'aslim',n:'San Luis sabor Limón', g:'ncv', az:true},
   {id:'fury',n:'FURY (energizante)', g:'ener', az:true}
 ];
@@ -186,7 +185,7 @@ function resolve(f, t){
   if (f.id === t.id) {
     code = 'NA';
     why = 'Es el mismo producto: si solo cambia el formato, no aplica limpieza y sanitización.';
-    if (f.g === 'acgs') why += ' Si cambia el sabor del agua con gas saborizada, aplica 3P.';
+    if (f.g === 'acgs') why += ' Entre sabores distintos de agua con gas saborizada aplica 3P.';
     if (f.g === 'ener') { code = '5PF'; why = 'Producción continua de FURY: el 5PF aplica 48 horas después del inicio de la producción.'; }
   } else if (f.g === 'sa' && ['iko','ikma','ccma','cco','turb'].includes(t.g) && f.s && f.s === t.s) {
     code = 'AT';
@@ -223,13 +222,13 @@ function resolve(f, t){
 
 const COLORS = {
   iko:'#FFD200', ikma:'#F5C400', ccma:'#E4002B', cco:'#F40009', jar:'#B0102A',
-  iksa:'#FFE45C', ccsa:'#111111', spsa:'#00A94F', fasa:'#E06A00', crush:'#F7941D',
-  fki:'#D6001C', fmv:'#7AC143', fuva:'#6B2C91', fna:'#FF8200', sch:'#F2E500', gin:'#8DB600',
+  iksa:'#8A8D91', ccsa:'#111111', spsa:'#00A94F', fasa:'#E06A00', crush:'#F7941D',
+  fki:'#D6001C', fmv:'#7AC143', fuva:'#6B2C91', fna:'#FF8200', sch:'#76B82A', gin:'#C8A13A',
   slsg:'#0072CE', bene:'#5BC2E7', slcg:'#003DA5', acgs:'#00A3AD',
-  ftp:'#E2384D', pcm:'#FFB000', pmf:'#E31937', plim:'#B5D334', puv:'#5B2A86',
-  ffc:'#FF9E1B', fffp:'#C21F4A', ffm:'#8CC63F', aslim:'#D4E157', asar:'#4B3F9E', slman:'#9CCC3C', slmar:'#F9A825', fury:'#1B1B1B'
+  ftp:'#E2384D', pcm:'#F28500', pmf:'#E31937', plim:'#B5D334', puv:'#5B2A86',
+  ffc:'#FF9E1B', fffp:'#C21F4A', ffm:'#8B5A2B', aslim:'#D4E157', asar:'#E85A9C', slman:'#F2B27A', slmar:'#F9A825', fury:'#1B1B1B'
 };
-const TEXTC = {iko:'#0B2A8C', ikma:'#0B2A8C', iksa:'#111', fury:'#C9A227'};
+const TEXTC = {iko:'#0B2A8C', ikma:'#0B2A8C', fury:'#C9A227'};
 function ink(id){
   if (TEXTC[id]) return TEXTC[id];
   const h = COLORS[id].slice(1), r=parseInt(h.substr(0,2),16), g=parseInt(h.substr(2,2),16), b=parseInt(h.substr(4,2),16);
