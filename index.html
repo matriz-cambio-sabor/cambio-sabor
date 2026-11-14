@@ -38,6 +38,10 @@
   td{border-bottom:1px solid var(--line);padding:6px 4px;vertical-align:top}
   td:first-child{font-weight:700;white-space:nowrap;width:80px}
   .tag{padding:2px 6px;border-radius:4px}
+  .pill{display:inline-block;padding:3px 10px;border-radius:14px;font-weight:600;font-size:13.5px;margin:2px 0}
+  .arrow{margin:0 6px;color:var(--muted)}
+  select.colored{font-weight:600;border-width:2px}
+  #result{border-top-width:6px}
   footer{font-size:11.5px;color:var(--muted);text-align:center;padding:4px 16px 24px;line-height:1.5}
 </style>
 </head>
@@ -92,7 +96,7 @@ const GROUPS = {
   sa:'Productos libres de azúcar', pung:'Productos pungentes', turb:'No pungentes con apariencia turbia',
   transp:'No pungentes con apariencia transparente', asg:'Aguas sin gas', acg:'Aguas con gas', acgs:'Aguas con gas saborizadas',
   ftp:'Frugos Fresh Tropical Punch', pcm:'Powerade Citrus Maracuyá', ener:'Producto carbonatado energizante',
-  ncv:'No carbonatados (Powerade, Frugos Fresh, agua saborizada)', jar:'Jarabe post-mix reformulado'
+  ncv:'No carbonatados (Powerade, Frugos Fresh, San Luis saborizada)', jar:'Jarabe post-mix reformulado'
 };
 const COLS = ['iko','ikma','ccma','cco','sa','pung','turb','transp','asg','acg','acgs','ftp','pcm','ener','ncv','jar'];
 const M = {
@@ -119,20 +123,17 @@ const P = [
   {id:'ikma',n:'Inca Kola Reformulada (menos azúcar)', g:'ikma', s:'ik', az:true},
   {id:'ccma',n:'Coca-Cola Reformulada (menos azúcar)', g:'ccma', s:'cc', az:true},
   {id:'cco', n:'Coca-Cola Sabor Original', g:'cco', s:'cc', az:true},
-  {id:'jar', n:'Jarabe post-mix reformulado (menos azúcar)', g:'jar', az:true},
   {id:'iksa',n:'Inca Kola Sin Azúcar', g:'sa', s:'ik'},
   {id:'ccsa',n:'Coca-Cola Sin Azúcar', g:'sa', s:'cc'},
   {id:'spsa',n:'SP Sin Azúcar', g:'sa', s:'sp'},
-  {id:'fasa',n:'Fanta Sin Azúcar', g:'sa', s:'fanta'},
   {id:'crush',n:'Crush Naranja', g:'sa', s:'crush'},
   {id:'fki', n:'Fanta Kola Inglesa', g:'pung', az:true},
   {id:'fmv', n:'Fanta Manzana Verde', g:'pung', az:true},
   {id:'fuva',n:'Fanta Uva', g:'pung', az:true},
-  {id:'fna', n:'Fanta Naranja', g:'turb', s:'fanta', az:true},
+  {id:'fna', n:'Fanta', g:'turb', s:'fanta', az:true},
   {id:'sch', n:'Schweppes Citrus', g:'transp', az:true},
   {id:'gin', n:'Ginger Ale', g:'transp', az:true},
   {id:'slsg',n:'San Luis sin gas', g:'asg'},
-  {id:'bene',n:'Benedictino', g:'asg'},
   {id:'slcg',n:'San Luis con gas', g:'acg'},
   {id:'acgs',n:'Agua con gas saborizada', g:'acgs', az:true},
   {id:'ftp', n:'Frugos Fresh Tropical Punch', g:'ftp', az:true, punch:true},
@@ -143,8 +144,10 @@ const P = [
   {id:'ffc', n:'Frugos Fresh Citrus (Naranja)', g:'ncv', az:true, nar:true},
   {id:'fffp',n:'Frugos Fresh Fruit Punch', g:'ncv', az:true, punch:true},
   {id:'ffm', n:'Frugos Fresh Manzana', g:'ncv', az:true},
-  {id:'aslim',n:'Agua saborizada Limón', g:'ncv', az:true},
-  {id:'asar',n:'Agua saborizada Arándano', g:'ncv', az:true},
+  {id:'slman',n:'San Luis Manzana', g:'ncv', az:true},
+  {id:'asar',n:'San Luis Arándano', g:'ncv', az:true},
+  {id:'slmar',n:'San Luis Maracuyá', g:'ncv', az:true},
+  {id:'aslim',n:'San Luis sabor Limón', g:'ncv', az:true},
   {id:'fury',n:'FURY (energizante)', g:'ener', az:true}
 ];
 const GROUP_ORDER = ['iko','ikma','ccma','cco','jar','sa','pung','turb','transp','asg','acg','acgs','ftp','pcm','ncv','ener'];
@@ -216,7 +219,27 @@ function resolve(f, t){
   return {code, why, notes};
 }
 
+const COLORS = {
+  iko:'#FFD200', ikma:'#F5C400', ccma:'#E4002B', cco:'#F40009', jar:'#B0102A',
+  iksa:'#FFE45C', ccsa:'#111111', spsa:'#00A94F', fasa:'#E06A00', crush:'#F7941D',
+  fki:'#D6001C', fmv:'#7AC143', fuva:'#6B2C91', fna:'#FF8200', sch:'#F2E500', gin:'#8DB600',
+  slsg:'#0072CE', bene:'#5BC2E7', slcg:'#003DA5', acgs:'#00A3AD',
+  ftp:'#E2384D', pcm:'#FFB000', pmf:'#E31937', plim:'#B5D334', puv:'#5B2A86',
+  ffc:'#FF9E1B', fffp:'#C21F4A', ffm:'#8CC63F', aslim:'#D4E157', asar:'#4B3F9E', slman:'#9CCC3C', slmar:'#F9A825', fury:'#1B1B1B'
+};
+const TEXTC = {iko:'#0B2A8C', ikma:'#0B2A8C', iksa:'#111', fury:'#C9A227'};
+function ink(id){
+  if (TEXTC[id]) return TEXTC[id];
+  const h = COLORS[id].slice(1), r=parseInt(h.substr(0,2),16), g=parseInt(h.substr(2,2),16), b=parseInt(h.substr(4,2),16);
+  return (0.299*r+0.587*g+0.114*b) > 165 ? '#1d2430' : '#fff';
+}
+function paint(sel){
+  if (sel.value){ sel.style.background = COLORS[sel.value]; sel.style.color = ink(sel.value); sel.style.borderColor = COLORS[sel.value]; sel.classList.add('colored'); }
+  else { sel.style.background=''; sel.style.color=''; sel.style.borderColor=''; sel.classList.remove('colored'); }
+}
+const pill = p => '<span class="pill" style="background:'+COLORS[p.id]+';color:'+ink(p.id)+'">'+p.n+'</span>';
 function render(){
+  paint(de); paint(a);
   const box = document.getElementById('result');
   if (!de.value || !a.value) { box.style.display='none'; return; }
   const f = byId(de.value), t = byId(a.value);
@@ -225,7 +248,8 @@ function render(){
   c.textContent = LABEL[r.code] || r.code;
   c.className = 'code lv-' + r.code;
   document.getElementById('rdesc').textContent = DESC[r.code];
-  document.getElementById('rroute').textContent = f.n + '  →  ' + t.n;
+  document.getElementById('rroute').innerHTML = pill(f) + '<span class="arrow">→</span>' + pill(t);
+  box.style.borderTopColor = COLORS[t.id];
   document.getElementById('rwhy').textContent = r.why;
   document.getElementById('rnotes').innerHTML = r.notes.map(n=>'<li class="'+n[0]+'">'+n[1]+'</li>').join('');
   box.style.display='block';
