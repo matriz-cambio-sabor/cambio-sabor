@@ -133,7 +133,7 @@ const P = [
   {id:'fmv', n:'Fanta Manzana Verde', g:'pung', az:true},
   {id:'fuva',n:'Fanta Uva', g:'pung', az:true},
   {id:'fna', n:'Fanta Naranja', g:'turb', s:'fanta', az:true},
-  {id:'sch', n:'Schweppes Citrus', g:'transp', az:true},
+  {id:'sch', n:'Schweppes Citrus', g:'transp', lab:'Carbonatadas sin azúcar'},
   {id:'gin', n:'Schweppes Ginger', g:'transp', az:true},
   {id:'slsg',n:'San Luis sin gas', g:'asg'},
   {id:'slcg',n:'San Luis con gas', g:'acg'},
@@ -166,9 +166,12 @@ const byId = id => P.find(p=>p.id===id);
 const de = document.getElementById('de'), a = document.getElementById('a');
 function fill(sel, ph){
   let html = '<option value="">'+ph+'</option>', cur = null;
-  const sorted = GROUP_ORDER.flatMap(g=>P.filter(p=>p.g===g));
+  const labOf = p => p.lab || OPTLABEL[p.g];
+  const byGroup = GROUP_ORDER.flatMap(g=>P.filter(p=>p.g===g));
+  const labels = [...new Set(byGroup.map(labOf))];
+  const sorted = labels.flatMap(l=>byGroup.filter(p=>labOf(p)===l));
   sorted.forEach(p=>{
-    const lab = OPTLABEL[p.g];
+    const lab = labOf(p);
     if (lab !== cur){ if(cur) html+='</optgroup>'; html+='<optgroup label="'+lab+'">'; cur = lab; }
     html += '<option value="'+p.id+'">'+p.n+'</option>';
   });
